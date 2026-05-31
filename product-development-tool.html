@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lockstep Product Incubator</title>
+  <style>
+    :root {
+      --bg: #09090b;
+      --panel: #18181b;
+      --panel-2: #0f0f12;
+      --border: #27272a;
+      --text: #f4f4f5;
+      --muted: #a1a1aa;
+      --green: #86efac;
+      --red: #fca5a5;
+      --yellow: #fde68a;
+      --blue: #93c5fd;
+      --purple: #c4b5fd;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top left, #18181b 0%, var(--bg) 45%);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 32px;
+    }
+
+    .wrap { max-width: 1380px; margin: 0 auto; }
+
+    .eyebrow {
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .22em;
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      font-size: clamp(36px, 6vw, 68px);
+      line-height: .95;
+      margin: 0 0 18px;
+      letter-spacing: -0.06em;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.6;
+      max-width: 900px;
+      margin-bottom: 28px;
+    }
+
+    .scenario-buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 28px; }
+
+    button {
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      padding: 11px 16px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-weight: 800;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    button.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+    .grid { display: grid; grid-template-columns: minmax(340px, 470px) 1fr; gap: 24px; align-items: start; }
+
+    @media (max-width: 980px) { .grid { grid-template-columns: 1fr; } body { padding: 20px; } }
+
+    .controls { display: grid; gap: 14px; }
+
+    .field, .card {
+      background: rgba(24, 24, 27, .92);
+      border: 1px solid var(--border);
+      border-radius: 26px;
+      padding: 22px;
+      box-shadow: 0 18px 50px rgba(0,0,0,.22);
+    }
+
+    .field-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 7px;
+      gap: 12px;
+    }
+
+    .field-title, .label {
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .09em;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .field-input-box, select, input[type="text"] {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 800;
+      padding: 6px 9px;
+      border-radius: 8px;
+    }
+
+    .field-input-box { text-align: right; width: 125px; }
+    input[type="text"] { width: 100%; margin-top: 10px; }
+
+    .field-input-box:focus, select:focus, input[type="text"]:focus { outline: 1px solid var(--muted); }
+
+    .field-value { font-size: 28px; font-weight: 950; margin-bottom: 15px; color: #ffffff; }
+
+    input[type="range"] { width: 100%; accent-color: #fafafa; cursor: pointer; }
+
+    .help { color: var(--muted); font-size: 14px; line-height: 1.5; margin-top: 9px; }
+
+    .results { display: grid; gap: 18px; }
+
+    .verdict-card { padding: 32px; }
+
+    .verdict { font-size: clamp(36px, 5vw, 58px); font-weight: 950; letter-spacing: -0.05em; margin-top: 6px; }
+
+    .metrics { display: grid; grid-template-columns: repeat(3, minmax(210px, 1fr)); gap: 16px; }
+
+    @media (max-width: 1050px) { .metrics { grid-template-columns: repeat(2, minmax(210px, 1fr)); } }
+    @media (max-width: 700px) { .metrics { grid-template-columns: 1fr; } }
+
+    .metric-value { font-size: 30px; font-weight: 950; letter-spacing: -0.04em; }
+
+    .green { color: var(--green); }
+    .red { color: var(--red); }
+    .yellow { color: var(--yellow); }
+    .blue { color: var(--blue); }
+    .purple { color: var(--purple); }
+
+    .module-title {
+      color: var(--text);
+      font-size: 24px;
+      font-weight: 950;
+      letter-spacing: -0.04em;
+      margin: 14px 0 -4px;
+    }
+
+    .task-grid {
+      display: grid;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .task {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .task-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .task-name { font-weight: 950; letter-spacing: -0.02em; }
+
+    .task-controls {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 12px;
+      align-items: end;
+    }
+
+    @media (max-width: 760px) { .task-controls { grid-template-columns: 1fr; } }
+
+    .tiny-label {
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-size: 11px;
+      font-weight: 900;
+      margin-bottom: 6px;
+    }
+
+    .range-pair {
+      display: grid;
+      grid-template-columns: 1fr 62px;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .small-num {
+      background: #09090b;
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 5px 6px;
+      width: 62px;
+      text-align: right;
+      font-weight: 800;
+    }
+
+    .formula {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px;
+      color: #d4d4d8;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 14px;
+      overflow-x: auto;
+      margin-top: 14px;
+      white-space: pre-wrap;
+    }
+
+    p { color: var(--muted); line-height: 1.65; margin: 12px 0 0; }
+
+    .pill-row { display:flex; flex-wrap:wrap; gap:10px; margin-top:14px; }
+    .pill {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 8px 12px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .mini-grid { display:grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-top: 14px; }
+    @media (max-width: 700px) { .mini-grid { grid-template-columns: 1fr; } }
+    .mini {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 18px;
+    }
+    .mini-value { font-size: 24px; font-weight: 950; margin-top: 8px; letter-spacing: -0.03em; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="eyebrow">Lockstep Strategic Modeling Suite</div>
+    <h1>Lockstep Product Incubator</h1>
+    <div class="subtitle">
+      Evaluate speculative products by modeling money, inventory, operational burden, human energy, and Kairos alignment. This version is preloaded for a compression sock launch, but works for any product campaign.
+    </div>
+
+    <div class="scenario-buttons">
+      <button id="conservativeBtn" onclick="loadScenario('conservative')">Conservative</button>
+      <button id="baseBtn" class="active" onclick="loadScenario('base')">Goal</button>
+      <button id="aggressiveBtn" onclick="loadScenario('aggressive')">Best Case</button>
+    </div>
+
+    <section class="grid">
+      <div class="controls">
+        <div class="field">
+          <div class="field-title">Product / Campaign Name</div>
+          <input type="text" id="productName" value="Performance Compression Socks" oninput="syncLinkedValuesToAllScenarios(); calculate();" />
+          <div class="help">Name the speculative product or campaign being incubated.</div>
+        </div>
+
+        <div class="field">
+          <div class="field-header">
+            <div class="field-title">Product Type</div>
+            <select id="productType" onchange="syncLinkedValuesToAllScenarios(); calculate();">
+              <option>Physical Product</option>
+              <option>Digital Product</option>
+              <option>Membership</option>
+              <option>Service</option>
+              <option>Media / IP</option>
+              <option>Hybrid</option>
+            </select>
+          </div>
+          <div class="help">This version is universal, but the default assumptions are for a physical product launch.</div>
+        </div>
+
+        <div class="module-title">Financial Capital</div>
+
+        <div class="field">
+          <div class="field-header">
+            <div class="field-title">Units Produced</div>
+            <input type="number" id="unitsProducedNum" class="field-input-box" min="0" max="10000" step="1">
+          </div>
+          <div class="field-value" id="unitsProducedValue"></div>
+          <input id="unitsProduced" type="range" min="0" max="10000" step="1" />
+          <div class="help">How many units are manufactured, created, or otherwise made available.</div>
+        </div>
+
+        <div class="field">
+          <div class="field-header">
+            <div class="field-title">Units Sold</div>
+            <input type="number" id="unitsSoldNum" class="field-input-box" min="0" max="10000" step="1">
+          </div>
+          <div class="field-value" id="unitsSoldValue"></div>
+          <input id="unitsSold" type="range" min="0" max="10000" step="1" />
+          <div class="help">Scenario-specific sell-through assumption.</div>
+        </div>
+
+        <div class="field">
+          <div class="field-header">
+            <div class="field-title">Sale Price</div>
+            <input type="number" id="salePriceNum" class="field-input-box" min="1" max="100" step="1">
+          </div>
+          <div class="field-value" id="salePriceValue"></div>
+          <input id="salePrice" type="range" min="1" max="100" step="1" />
+          <div class="help">Average selling price per unit.</div>
+        </div>
+
+        <div class="field">
+          <div class="field-header">
+            <div class="field-title">Unit Cost / COGS</div>
+            <input type="number" id="unitCostNum" class="field-input-box" min="0" max="50" step="0.1">
+          </div>
+          <div class="field-value" id="unitCostValue"></div>
+          <input id="unitCost" type="range" min="0" max="50" step="0.1" />
+          <div class="help">Cost to produce each unit. Unsold inventory still costs money.</div>
+        </div>
+
+        <div class="field">
+          <div class="field-header">
+            <div class="field-title">Fulfillment Cost Per Sold Unit</div>
+            <input type="number" id="fulfillmentCostNum" class="field-input-box" min="0" max="50" step="0.1">
+          </div>
+          <div class="field-value" id="fulfillmentCostValue"></div>
+          <input id="fulfillmentCost" type="range" min="0" max="50" step="0.1" />
+          <div class="help">Packaging, pick/pack, shipping subsidy, returns handling, or other per-sale cost.</div>
+        </div>
+
+        <div class="field">
+          <div class="field-header">
+            <div class="field-title">Platform / Payment Fees</div>
+            <input type="number" id="platformFeeNum" class="field-input-box" min="0" max="40" step="0.5">
+          </div>
+          <div class="field-value" id="platformFeeValue"></div>
+          <input id="platformFee" type="range" min="0" max="40" step="0.5" />
+          <div class="help">Shopify, payment processing, marketplace, or other percentage fees.</div>
+        </div>
+
+        <div class="field">
+          <div class="field-header">
+            <div class="field-title">Return / Refund Rate</div>
+            <input type="number" id="returnRateNum" class="field-input-box" min="0" max="50" step="0.5">
+          </div>
+          <div class="field-value" id="returnRateValue"></div>
+          <input id="returnRate" type="range" min="0" max="50" step="0.5" />
+          <div class="help">Expected revenue lost to returns/refunds.</div>
+        </div>
+
+        <div class="field">
+          <div class="field-header">
+            <div class="field-title">Marketing Spend</div>
+            <input type="number" id="marketingSpendNum" class="field-input-box" min="0" max="10000" step="1">
+          </div>
+          <div class="field-value" id="marketingSpendValue"></div>
+          <input id="marketingSpend" type="range" min="0" max="10000" step="1" />
+          <div class="help">Paid media, content creation, launch assets, email tools, testing budget.</div>
+        </div>
+
+        <div class="field">
+          <div class="field-header">
+            <div class="field-title">Setup / Ops Spend</div>
+            <input type="number" id="opsSpendNum" class="field-input-box" min="0" max="2500" step="1">
+          </div>
+          <div class="field-value" id="opsSpendValue"></div>
+          <input id="opsSpend" type="range" min="0" max="2500" step="1" />
+          <div class="help">Website setup, analytics, finance, operations setup, tools, contractors.</div>
+        </div>
+
+        <div class="field">
+          <div class="field-header">
+            <div class="field-title">Lockstep Funding %</div>
+            <input type="number" id="lockstepFundingShareNum" class="field-input-box" min="0" max="100" step="1">
+          </div>
+          <div class="field-value" id="lockstepFundingShareValue"></div>
+          <input id="lockstepFundingShare" type="range" min="0" max="100" step="1" />
+          <div class="help">What percentage of total cash deployed comes from Lockstep.</div>
+        </div>
+
+        <div class="module-title">Strategic Alignment</div>
+
+        <div class="field">
+          <div class="field-header">
+            <div class="field-title">Strategic Fit</div>
+            <input type="number" id="strategicFitNum" class="field-input-box" min="1" max="5" step="1">
+          </div>
+          <div class="field-value" id="strategicFitValue"></div>
+          <input id="strategicFit" type="range" min="1" max="5" step="1" />
+          <div class="help">Does this strengthen Lockstep's ecosystem, learning, network, IP, or future deal flow?</div>
+        </div>
+
+        <div class="module-title">Human Capital Engine</div>
+
+        <div class="field">
+          <div class="field-title">Work Streams</div>
+          <div class="help">
+            For each function, estimate hours and Resonance. Resonance asks "what is the character of the hours?"
+          </div>
+          <div class="task-grid" id="taskGrid"></div>
+        </div>
+      </div>
+
+      <div class="results">
+        <div class="card verdict-card">
+          <div class="label">Incubation Read</div>
+          <div class="verdict" id="verdict"></div>
+          <p id="verdictSubtext"></p>
+          <div class="pill-row">
+            <div class="pill" id="humanReadPill"></div>
+            <div class="pill" id="financialReadPill"></div>
+            <div class="pill" id="strategicReadPill"></div>
+          </div>
+        </div>
+
+        <div class="metrics">
+          <div class="card"><div class="label">Gross Revenue</div><div class="metric-value" id="grossRevenue"></div></div>
+          <div class="card"><div class="label">Net Revenue</div><div class="metric-value" id="netRevenue"></div></div>
+          <div class="card"><div class="label">Net Profit</div><div class="metric-value" id="netProfit"></div></div>
+
+          <div class="card"><div class="label">Total Cash Deployed</div><div class="metric-value" id="totalCashDeployed"></div></div>
+          <div class="card"><div class="label">Lockstep Cash Invested</div><div class="metric-value" id="lockstepCash"></div></div>
+          <div class="card"><div class="label">Partner Cash Invested</div><div class="metric-value" id="partnerCash"></div></div>
+          <div class="card"><div class="label">Lockstep Profit</div><div class="metric-value" id="lockstepProfit"></div></div>
+          <div class="card"><div class="label">Partner Profit</div><div class="metric-value" id="partnerProfit"></div></div>
+
+          <div class="card"><div class="label">Lockstep ROI</div><div class="metric-value" id="lockstepROI"></div></div>
+          <div class="card"><div class="label">Lockstep Multiple</div><div class="metric-value" id="lockstepMultiple"></div></div>
+          <div class="card"><div class="label">Units to Break Even</div><div class="metric-value" id="breakEvenUnits"></div></div>
+
+          <div class="card"><div class="label">Total Human Hours</div><div class="metric-value" id="totalHours"></div></div>
+          <div class="card"><div class="label">Human Experience Index</div><div class="metric-value" id="humanExperience"></div></div>
+          <div class="card"><div class="label">Kairos Score</div><div class="metric-value" id="kairosScore"></div></div>
+
+          <div class="card"><div class="label">Profit Per Raw Hour</div><div class="metric-value" id="profitPerHour"></div></div>
+          <div class="card"><div class="label">Profit Per Kairos Unit</div><div class="metric-value" id="profitPerKairos"></div></div>
+          <div class="card"><div class="label">Resource Burden</div><div class="metric-value" id="resourceBurden"></div></div>
+        </div>
+
+        <div class="card">
+          <div class="label">Product Economics</div>
+          <div class="mini-grid">
+            <div class="mini"><div class="label">Sell-Through</div><div class="mini-value" id="sellThrough"></div></div>
+            <div class="mini"><div class="label">Gross Margin / Sold Unit</div><div class="mini-value" id="grossMarginPerUnit"></div></div>
+            <div class="mini"><div class="label">Product Margin After COGS + Fulfillment</div><div class="mini-value" id="productMargin"></div></div>
+            <div class="mini"><div class="label">Unsold Inventory Cost</div><div class="mini-value" id="unsoldInventoryCost"></div></div>
+            <div class="mini"><div class="label">Required ROAS</div><div class="mini-value" id="requiredROAS"></div></div>
+          </div>
+          <p>This separates product viability from operational burden. A product can be financially viable and still be a bad use of human life.</p>
+        </div>
+
+        <div class="card">
+          <div class="label">Human Capital Diagnosis</div>
+          <div class="mini-grid">
+            <div class="mini"><div class="label">Average Resonance</div><div class="mini-value" id="avgResonance"></div></div>
+            <div class="mini"><div class="label">Resonant Hours</div><div class="mini-value" id="resonantHours"></div></div>
+          </div>
+          <p id="humanDiagnosis"></p>
+        </div>
+
+        <div class="card">
+          <div class="label">Simple Deal Read</div>
+          <p id="dealRead"></p>
+          <div class="formula" id="formula"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const taskNames = [
+      "Top-Level Biz Dev / Consulting / Discovery",
+      "Creative",
+      "Product Development",
+      "Branding / Positioning",
+      "Website / Landing Page",
+      "Meta Ads / Paid Growth",
+      "Email Setup / Campaign",
+      "Analytics / Reporting",
+      "Finance & Ops",
+      "Fulfillment / Shipping",
+      "Customer Service"
+    ];
+
+    const scenarios = {
+      conservative: {
+        productName: "Performance Compression Socks",
+        productType: "Physical Product",
+        unitsProduced: 1000, unitsSold: 350, salePrice: 28, unitCost: 6.5, fulfillmentCost: 5, platformFee: 4, returnRate: 8,
+        marketingSpend: 6000, opsSpend: 3500, lockstepFundingShare: 100, strategicFit: 3,
+        tasks: [
+          { hours: 20, resonance: 5 },
+          { hours: 25, resonance: 5 },
+          { hours: 40, resonance: 4 },
+          { hours: 28, resonance: 5 },
+          { hours: 28, resonance: 5 },
+          { hours: 55, resonance: 4 },
+          { hours: 20, resonance: 3 },
+          { hours: 16, resonance: 2 },
+          { hours: 30, resonance: 2 },
+          { hours: 45, resonance: 1 },
+          { hours: 45, resonance: 1 }
+        ]
+      },
+      base: {
+        productName: "Performance Compression Socks",
+        productType: "Physical Product",
+
+        unitsProduced: 100,
+        unitsSold: 75,
+
+        salePrice: 30,
+        unitCost: 6,
+        fulfillmentCost: 8,
+
+        platformFee: 3,
+        returnRate: 0,
+
+        marketingSpend: 0,
+        opsSpend: 0,
+
+        lockstepFundingShare: 100,
+
+        strategicFit: 3,
+
+        tasks: [
+          { hours: 10, resonance: 4 }, // Top-Level Biz Dev / Discovery
+          { hours: 10, resonance: 4 }, // Creative
+          { hours: 5, resonance: 4 },  // Product Development
+          { hours: 5, resonance: 4 },  // Branding
+          { hours: 4, resonance: 3 },  // Website
+          { hours: 2, resonance: 3 },  // Meta Ads
+          { hours: 2, resonance: 3 },  // Email
+          { hours: 2, resonance: 4 },  // Analytics
+          { hours: 2, resonance: 2 },  // Finance & Ops
+          { hours: 5, resonance: 3 },  // Fulfillment
+          { hours: 3, resonance: 3 }   // Customer Service
+        ]
+      },
+      aggressive: {
+        productName: "Performance Compression Socks",
+        productType: "Physical Product",
+        unitsProduced: 5000, unitsSold: 4200, salePrice: 35, unitCost: 4.75, fulfillmentCost: 4, platformFee: 4, returnRate: 5,
+        marketingSpend: 40000, opsSpend: 10000, lockstepFundingShare: 100, strategicFit: 4,
+        tasks: [
+          { hours: 60, resonance: 5 },
+          { hours: 80, resonance: 5 },
+          { hours: 65, resonance: 4 },
+          { hours: 45, resonance: 5 },
+          { hours: 45, resonance: 5 },
+          { hours: 130, resonance: 4 },
+          { hours: 50, resonance: 3 },
+          { hours: 35, resonance: 2 },
+          { hours: 75, resonance: 2 },
+          { hours: 160, resonance: 1 },
+          { hours: 120, resonance: 1 }
+        ]
+      }
+    };
+
+    const ids = ["unitsProduced", "unitsSold", "salePrice", "unitCost", "fulfillmentCost", "platformFee", "returnRate", "marketingSpend", "opsSpend", "lockstepFundingShare", "strategicFit"];
+    const linkedIds = ["salePrice", "unitCost", "fulfillmentCost", "platformFee", "returnRate", "lockstepFundingShare"];
+    const scenarioOnlyIds = ["unitsProduced", "unitsSold", "marketingSpend", "opsSpend", "strategicFit"];
+    let currentScenario = "base";
+
+    const money = value => value.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+    const money2 = value => value.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 });
+    const num = value => value.toLocaleString("en-US", { maximumFractionDigits: 0 });
+    const one = value => value.toLocaleString("en-US", { maximumFractionDigits: 1, minimumFractionDigits: 1 });
+    const pct = value => `${value.toFixed(1)}%`;
+
+    const resonanceWeight = r => ({1:-1, 2:0.5, 3:1, 4:2, 5:4}[Math.round(r)] || 1);
+
+    function setText(id, value) { document.getElementById(id).textContent = value; }
+    function setClass(id, className) { document.getElementById(id).className = className; }
+
+    function taskHtml(name, index) {
+      return `
+        <div class="task">
+          <div class="task-top">
+            <div class="task-name">${name}</div>
+            <div class="label" id="taskRead${index}"></div>
+          </div>
+          <div class="task-controls">
+            <div>
+              <div class="tiny-label">Hours</div>
+              <div class="range-pair">
+                <input id="taskHours${index}" type="range" min="0" max="500" step="5" />
+                <input id="taskHoursNum${index}" class="small-num" type="number" min="0" max="500" step="5" />
+              </div>
+            </div>
+            <div>
+              <div class="tiny-label">Resonance</div>
+              <div class="range-pair">
+                <input id="taskResonance${index}" type="range" min="1" max="5" step="1" />
+                <input id="taskResonanceNum${index}" class="small-num" type="number" min="1" max="5" step="1" />
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function buildTasks() {
+      document.getElementById("taskGrid").innerHTML = taskNames.map(taskHtml).join("");
+      taskNames.forEach((_, i) => {
+        ["Hours", "Resonance"].forEach(kind => {
+          const slider = document.getElementById(`task${kind}${i}`);
+          const numInput = document.getElementById(`task${kind}Num${i}`);
+          slider.addEventListener("input", e => {
+            numInput.value = e.target.value;
+            saveTaskToScenario(i, kind.toLowerCase(), Number(e.target.value));
+            calculate();
+          });
+          numInput.addEventListener("input", e => {
+            let val = Number(e.target.value);
+            const min = Number(slider.min);
+            const max = Number(slider.max);
+            if (val < min) val = min;
+            if (val > max) val = max;
+            slider.value = val;
+            saveTaskToScenario(i, kind.toLowerCase(), val);
+            calculate();
+          });
+        });
+      });
+    }
+
+    function saveTaskToScenario(index, key, value) {
+      if (!currentScenario) return;
+      scenarios[currentScenario].tasks[index][key] = value;
+    }
+
+    function syncLinkedValuesToAllScenarios() {
+      linkedIds.forEach(id => {
+        const value = Number(document.getElementById(id).value);
+        Object.keys(scenarios).forEach(name => { scenarios[name][id] = value; });
+      });
+      Object.keys(scenarios).forEach(name => {
+        scenarios[name].productName = document.getElementById("productName").value;
+        scenarios[name].productType = document.getElementById("productType").value;
+      });
+    }
+
+    function saveCurrentScenario() {
+      if (!currentScenario) return;
+      scenarioOnlyIds.forEach(id => {
+        scenarios[currentScenario][id] = Number(document.getElementById(id).value);
+      });
+      taskNames.forEach((_, i) => {
+        scenarios[currentScenario].tasks[i] = {
+          hours: Number(document.getElementById(`taskHours${i}`).value),
+          resonance: Number(document.getElementById(`taskResonance${i}`).value),
+        };
+      });
+      syncLinkedValuesToAllScenarios();
+    }
+
+    function loadScenario(name) {
+      saveCurrentScenario();
+      currentScenario = name;
+      const s = scenarios[name];
+
+      document.getElementById("productName").value = s.productName;
+      document.getElementById("productType").value = s.productType;
+
+      ids.forEach(id => {
+        document.getElementById(id).value = s[id];
+        document.getElementById(`${id}Num`).value = s[id];
+      });
+
+      s.tasks.forEach((task, i) => {
+        document.getElementById(`taskHours${i}`).value = task.hours;
+        document.getElementById(`taskHoursNum${i}`).value = task.hours;
+        document.getElementById(`taskResonance${i}`).value = task.resonance;
+        document.getElementById(`taskResonanceNum${i}`).value = task.resonance;
+      });
+
+      document.querySelectorAll(".scenario-buttons button").forEach(btn => btn.classList.remove("active"));
+      document.getElementById(`${name}Btn`).classList.add("active");
+      calculate();
+    }
+
+    function humanRead(avg) {
+      if (avg < 2) return "Wasteland";
+      if (avg < 3) return "Obligation";
+      if (avg < 4) return "Sustainable";
+      if (avg < 4.6) return "Resonant";
+      return "Grail Work";
+    }
+
+
+    function calculate() {
+      const unitsProduced = Number(document.getElementById("unitsProduced").value);
+      const unitsSold = Number(document.getElementById("unitsSold").value);
+      const salePrice = Number(document.getElementById("salePrice").value);
+      const unitCost = Number(document.getElementById("unitCost").value);
+      const fulfillmentCost = Number(document.getElementById("fulfillmentCost").value);
+      const platformFee = Number(document.getElementById("platformFee").value);
+      const returnRate = Number(document.getElementById("returnRate").value);
+      const marketingSpend = Number(document.getElementById("marketingSpend").value);
+      const opsSpend = Number(document.getElementById("opsSpend").value);
+      const lockstepFundingShare = Number(document.getElementById("lockstepFundingShare").value);
+      const strategicFit = Number(document.getElementById("strategicFit").value);
+
+      setText("unitsProducedValue", num(unitsProduced));
+      setText("unitsSoldValue", num(unitsSold));
+      setText("salePriceValue", money(salePrice));
+      setText("unitCostValue", money2(unitCost));
+      setText("fulfillmentCostValue", money2(fulfillmentCost));
+      setText("platformFeeValue", `${platformFee}%`);
+      setText("returnRateValue", `${returnRate}%`);
+      setText("marketingSpendValue", money(marketingSpend));
+      setText("opsSpendValue", money(opsSpend));
+      setText("lockstepFundingShareValue", `${lockstepFundingShare}%`);
+      setText("strategicFitValue", `${strategicFit} / 5`);
+
+      const grossRevenue = unitsSold * salePrice;
+      const refundCost = grossRevenue * (returnRate / 100);
+      const platformCost = grossRevenue * (platformFee / 100);
+      const manufacturingCost = unitsProduced * unitCost;
+      const fulfillmentTotal = unitsSold * fulfillmentCost;
+      const totalCashDeployed = manufacturingCost + fulfillmentTotal + platformCost + refundCost + marketingSpend + opsSpend;
+      const netRevenue = grossRevenue - refundCost - platformCost;
+      const netProfit = netRevenue - manufacturingCost - fulfillmentTotal - marketingSpend - opsSpend;
+      const lockstepCash = totalCashDeployed * (lockstepFundingShare / 100);
+      const partnerCash = totalCashDeployed - lockstepCash;
+      const lockstepProfit = netProfit * (lockstepFundingShare / 100);
+      const partnerProfit = netProfit * (1 - (lockstepFundingShare / 100));
+      const roi = lockstepCash > 0 ? (lockstepProfit / lockstepCash) * 100 : 0;
+      const lockstepMultiple = lockstepCash > 0 ? (lockstepProfit + lockstepCash) / lockstepCash : 0;
+
+      const effectiveRevenuePerUnit = salePrice * (1 - (platformFee / 100) - (returnRate / 100));
+      const variableCostPerSoldUnit = fulfillmentCost;
+      const contributionPerUnitBeforeInventory = effectiveRevenuePerUnit - variableCostPerSoldUnit;
+      const fixedCash = manufacturingCost + marketingSpend + opsSpend;
+      const breakEvenUnits = contributionPerUnitBeforeInventory > 0 ? fixedCash / contributionPerUnitBeforeInventory : 0;
+      const requiredROAS = marketingSpend > 0 ? grossRevenue / marketingSpend : 0;
+      const grossMarginPerUnit = salePrice - unitCost - fulfillmentCost - (salePrice * platformFee / 100) - (salePrice * returnRate / 100);
+      const productProfitAfterCogsFulfillment = netRevenue - manufacturingCost - fulfillmentTotal;
+      const productMargin = netRevenue > 0 ? (productProfitAfterCogsFulfillment / netRevenue) * 100 : 0;
+      const sellThrough = unitsProduced > 0 ? (unitsSold / unitsProduced) * 100 : 0;
+      const unsoldInventoryCost = Math.max(unitsProduced - unitsSold, 0) * unitCost;
+
+      let totalHours = 0;
+      let weightedResonance = 0;
+      let resonantHours = 0;
+      let kairosScore = 0;
+
+      taskNames.forEach((_, i) => {
+        const hours = Number(document.getElementById(`taskHours${i}`).value);
+        const resonance = Number(document.getElementById(`taskResonance${i}`).value);
+
+        totalHours += hours;
+        weightedResonance += hours * resonance;
+        resonantHours += hours * resonanceWeight(resonance);
+        kairosScore += hours * resonanceWeight(resonance);
+
+        let read = "Neutral";
+        let cls = "label";
+        if (resonance <= 1) { read = "Drain"; cls = "label red"; }
+        else if (resonance === 2) { read = "Depleting"; cls = "label yellow"; }
+        else if (resonance >= 5) { read = "Play"; cls = "label green"; }
+        else if (resonance >= 4) { read = "Pull"; cls = "label blue"; }
+        document.getElementById(`taskRead${i}`).textContent = read;
+        document.getElementById(`taskRead${i}`).className = cls;
+      });
+
+      const avgResonance = totalHours > 0 ? weightedResonance / totalHours : 0;
+      const profitPerHour = totalHours > 0 ? netProfit / totalHours : 0;
+      const profitPerKairos = kairosScore !== 0 ? netProfit / kairosScore : 0;
+
+      const financialScore = Math.max(0, Math.min(5, roi / 40 + 2.5)); 
+      const humanScore = avgResonance;
+      const combinedScore = (financialScore * 0.35) + (humanScore * 0.45) + (strategicFit * 0.20);
+
+      let verdict = "Misaligned";
+      let verdictColor = "verdict red";
+      if (combinedScore >= 4.6 && netProfit > 0 && avgResonance >= 4) { verdict = "Grail Opportunity"; verdictColor = "verdict green"; }
+      else if (combinedScore >= 4.1 && netProfit > 0) { verdict = "High Resonance"; verdictColor = "verdict green"; }
+      else if (combinedScore >= 3.5 && netProfit > 0) { verdict = "Strong Alignment"; verdictColor = "verdict blue"; }
+      else if (combinedScore >= 3.0) { verdict = "Strategic Incubation"; verdictColor = "verdict yellow"; }
+      else if (netProfit > 0) { verdict = "Profitable but Costly"; verdictColor = "verdict yellow"; }
+
+      let burden = "Light";
+      if (totalHours > 700) burden = "Heavy";
+      else if (totalHours > 350) burden = "Moderate";
+
+      setText("verdict", verdict);
+      setClass("verdict", verdictColor);
+      setText("verdictSubtext", `${document.getElementById("productName").value} is being judged across cash, profit, hours, resonance, and strategic fit — not financial return alone.`);
+      setText("humanReadPill", `Human: ${humanRead(avgResonance)}`);
+      setText("financialReadPill", `Financial: ${roi >= 0 ? "Positive" : "Negative"} ROI`);
+      setText("strategicReadPill", `Strategic: ${strategicFit}/5`);
+
+      setText("grossRevenue", money(grossRevenue));
+      setText("netRevenue", money(netRevenue));
+      setText("netProfit", money(netProfit));
+      setClass("netProfit", `metric-value ${netProfit >= 0 ? "green" : "red"}`);
+      setText("totalCashDeployed", money(totalCashDeployed));
+      setText("lockstepCash", money(lockstepCash));
+      setText("partnerCash", money(partnerCash));
+      setText("lockstepProfit", money(lockstepProfit));
+      setClass("lockstepProfit", `metric-value ${lockstepProfit >= 0 ? "green" : "red"}`);
+      setText("partnerProfit", money(partnerProfit));
+      setClass("partnerProfit", `metric-value ${partnerProfit >= 0 ? "green" : "red"}`);
+      setText("lockstepROI", pct(roi));
+      setClass("lockstepROI", `metric-value ${roi >= 0 ? "green" : "red"}`);
+      setText("lockstepMultiple", `${lockstepMultiple.toFixed(2)}x`);
+      setText("breakEvenUnits", num(breakEvenUnits));
+
+      setText("totalHours", num(totalHours));
+      setText("humanExperience", `${one(avgResonance)} / 5`);
+      setClass("humanExperience", `metric-value ${avgResonance >= 4 ? "green" : avgResonance >= 3 ? "yellow" : "red"}`);
+      setText("kairosScore", num(kairosScore));
+      setClass("kairosScore", `metric-value ${kairosScore >= 300 ? "green" : kairosScore >= 100 ? "yellow" : "red"}`);
+      setText("profitPerHour", money2(profitPerHour));
+      setText("profitPerKairos", money2(profitPerKairos));
+      setText("resourceBurden", burden);
+      setClass("resourceBurden", `metric-value ${burden === "Light" ? "green" : burden === "Moderate" ? "yellow" : "red"}`);
+
+      setText("sellThrough", pct(sellThrough));
+      setText("grossMarginPerUnit", money2(grossMarginPerUnit));
+      setText("productMargin", pct(productMargin));
+      setClass("productMargin", `mini-value ${productMargin >= 50 ? "green" : productMargin >= 25 ? "yellow" : "red"}`);
+      setText("unsoldInventoryCost", money(unsoldInventoryCost));
+      setText("requiredROAS", `${requiredROAS.toFixed(2)}x`);
+
+      setText("avgResonance", `${one(avgResonance)} / 5`);
+      setText("resonantHours", num(resonantHours));
+
+      let diagnosis = "This product has a balanced human profile.";
+      if (avgResonance < 2.5) diagnosis = "Warning: this is likely a wasteland product unless the low-resonance work is delegated, automated, or redesigned.";
+      else if (avgResonance >= 4) diagnosis = "This is unusually healthy: the work pulls energy forward and has the potential to create momentum instead of only consuming it.";
+      else if (avgResonance < 3 && netProfit > 0) diagnosis = "This may be profitable but emotionally expensive. Treat it as an investment only if the low-resonance work is removed from the core team.";
+      setText("humanDiagnosis", diagnosis);
+
+      let dealRead = "This looks like a usable test project.";
+      if (netProfit < 0) dealRead = "The campaign does not yet clear financial break-even. Improve margin, reduce spend, sell more units, or treat it as a deliberate learning experiment.";
+      else if (netProfit > 0 && avgResonance < 3) dealRead = "The campaign makes money, but the quality of the hours is not good enough yet. Delegate, automate, or redesign the operating model before scaling.";
+      else if (netProfit > 0 && avgResonance >= 4) dealRead = "This is the kind of project Lockstep should study closely: financial upside paired with healthy human energy.";
+      setText("dealRead", dealRead);
+
+      setText("formula", `Gross Revenue = Units Sold × Sale Price
+Net Revenue = Gross Revenue - Refunds - Platform Fees
+Total Cash Deployed = Manufacturing Cost + Fulfillment Cost + Platform Fees + Refunds + Marketing Spend + Setup/Ops Spend
+Product Margin = (Net Revenue - Manufacturing Cost - Fulfillment Cost) ÷ Net Revenue
+Net Profit = Net Revenue - Manufacturing Cost - Fulfillment Cost - Marketing Spend - Setup/Ops Spend
+
+Average Resonance = Σ(Hours × Resonance) ÷ Total Hours
+Kairos Score = Σ(Hours × Resonance Weight)
+
+Resonance Weight:
+1 = -1.0 | 2 = 0.5 | 3 = 1.0 | 4 = 2.0 | 5 = 4.0
+
+Combined Incubation Score = Financial 35% + Human 45% + Strategic 20%`);
+    }
+
+    ids.forEach(id => {
+      const slider = document.getElementById(id);
+      const numInput = document.getElementById(`${id}Num`);
+
+      slider.addEventListener("input", (e) => {
+        numInput.value = e.target.value;
+        if (linkedIds.includes(id)) syncLinkedValuesToAllScenarios();
+        calculate();
+      });
+
+      numInput.addEventListener("input", (e) => {
+        let val = Number(e.target.value);
+        const min = Number(slider.min);
+        const max = Number(slider.max);
+        if (val < min) val = min;
+        if (val > max) val = max;
+        slider.value = val;
+        if (linkedIds.includes(id)) syncLinkedValuesToAllScenarios();
+        calculate();
+      });
+    });
+
+    buildTasks();
+    currentScenario = null;
+    loadScenario("base");
+  </script>
+</body>
+</html>
