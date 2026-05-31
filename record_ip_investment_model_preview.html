@@ -164,6 +164,15 @@
       margin-top: 14px;
       white-space: pre-wrap;
     }
+
+    .module-title {
+      grid-column: 1 / -1;
+      color: var(--text);
+      font-size: 24px;
+      font-weight: 950;
+      letter-spacing: -0.04em;
+      margin: 10px 0 -4px;
+    }
   </style>
 </head>
 <body>
@@ -242,6 +251,58 @@
           <div class="help">Approximate dollars paid per stream. This is a blunt blended estimate, not a precise royalty statement.</div>
         </div>
 
+        <div class="module-title">Vinyl Sales Module</div>
+
+        <div class="field">
+          <div class="field-header">
+            <div class="field-title">Vinyl Units Pressed</div>
+            <input type="number" id="vinylUnitsPressedNum" class="field-input-box" min="0" max="10000" step="50">
+          </div>
+          <div class="field-value" id="vinylUnitsPressedValue"></div>
+          <input id="vinylUnitsPressed" type="range" min="0" max="10000" step="50" />
+          <div class="help">Total number of vinyl units manufactured for this release.</div>
+        </div>
+
+        <div class="field">
+          <div class="field-header">
+            <div class="field-title">Vinyl Units Sold</div>
+            <input type="number" id="vinylUnitsSoldNum" class="field-input-box" min="0" max="10000" step="50">
+          </div>
+          <div class="field-value" id="vinylUnitsSoldValue"></div>
+          <input id="vinylUnitsSold" type="range" min="0" max="10000" step="50" />
+          <div class="help">Estimated sell-through. This can vary by Conservative, Goal, and Best Case.</div>
+        </div>
+
+        <div class="field">
+          <div class="field-header">
+            <div class="field-title">Vinyl Sale Price</div>
+            <input type="number" id="vinylSalePriceNum" class="field-input-box" min="5" max="100" step="1">
+          </div>
+          <div class="field-value" id="vinylSalePriceValue"></div>
+          <input id="vinylSalePrice" type="range" min="5" max="100" step="1" />
+          <div class="help">Retail price per vinyl unit.</div>
+        </div>
+
+        <div class="field">
+          <div class="field-header">
+            <div class="field-title">Vinyl Cost Per Unit</div>
+            <input type="number" id="vinylCostPerUnitNum" class="field-input-box" min="1" max="50" step="0.5">
+          </div>
+          <div class="field-value" id="vinylCostPerUnitValue"></div>
+          <input id="vinylCostPerUnit" type="range" min="1" max="50" step="0.5" />
+          <div class="help">Manufacturing cost per pressed unit. Unsold inventory still costs money.</div>
+        </div>
+
+        <div class="field">
+          <div class="field-header">
+            <div class="field-title">Fulfillment / Fees Per Sold Unit</div>
+            <input type="number" id="vinylFeesPerUnitNum" class="field-input-box" min="0" max="30" step="0.5">
+          </div>
+          <div class="field-value" id="vinylFeesPerUnitValue"></div>
+          <input id="vinylFeesPerUnit" type="range" min="0" max="30" step="0.5" />
+          <div class="help">Payment processing, platform fees, packaging, shipping subsidy, or other per-sale cost.</div>
+        </div>
+
         
       </div>
 
@@ -264,6 +325,12 @@
           <div class="card"><div class="label">Artist Profit</div><div class="metric-value" id="artistProfit"></div></div>
           <div class="card"><div class="label">Company ROI</div><div class="metric-value" id="roi"></div></div>
           <div class="card"><div class="label">Company Multiple on Invested Capital</div><div class="metric-value" id="multiple"></div></div>
+          <div class="card"><div class="label">Vinyl Gross Revenue</div><div class="metric-value" id="vinylGrossRevenue"></div></div>
+          <div class="card"><div class="label">Vinyl Total Cost</div><div class="metric-value" id="vinylTotalCost"></div></div>
+          <div class="card"><div class="label">Vinyl Profit</div><div class="metric-value" id="vinylProfit"></div></div>
+          <div class="card"><div class="label">Vinyl Sell-Through</div><div class="metric-value" id="vinylSellThrough"></div></div>
+          <div class="card"><div class="label">Profit Per Unit Pressed</div><div class="metric-value" id="vinylProfitPerPressed"></div></div>
+          <div class="card"><div class="label">Profit Per Unit Sold</div><div class="metric-value" id="vinylProfitPerSold"></div></div>
         </div>
 
         <div class="card">
@@ -288,12 +355,32 @@
 
   <script>
     const scenarios = {
-      conservative: { spotifyStreams: 2000000, spotifyShare: 50, cashInvested: 25000, companyFundingShare: 50, distributionFee: 15, streamingRate: 0.004, ownership: 50 },
-      base: { spotifyStreams: 7037000, spotifyShare: 50, cashInvested: 25000, companyFundingShare: 50, distributionFee: 15, streamingRate: 0.004, ownership: 50 },
-      aggressive: { spotifyStreams: 15000000, spotifyShare: 50, cashInvested: 25000, companyFundingShare: 50, distributionFee: 15, streamingRate: 0.004, ownership: 50 }
+      conservative: { spotifyStreams: 2000000, spotifyShare: 50, cashInvested: 25000, companyFundingShare: 50, distributionFee: 15, streamingRate: 0.004, vinylUnitsPressed: 500, vinylUnitsSold: 250, vinylSalePrice: 35, vinylCostPerUnit: 9, vinylFeesPerUnit: 5 },
+      base: { spotifyStreams: 7037000, spotifyShare: 50, cashInvested: 25000, companyFundingShare: 50, distributionFee: 15, streamingRate: 0.004, vinylUnitsPressed: 500, vinylUnitsSold: 350, vinylSalePrice: 35, vinylCostPerUnit: 9, vinylFeesPerUnit: 5 },
+      aggressive: { spotifyStreams: 15000000, spotifyShare: 50, cashInvested: 25000, companyFundingShare: 50, distributionFee: 15, streamingRate: 0.004, vinylUnitsPressed: 500, vinylUnitsSold: 500, vinylSalePrice: 35, vinylCostPerUnit: 9, vinylFeesPerUnit: 5 }
     };
 
-    const ids = ["spotifyStreams", "spotifyShare", "cashInvested", "companyFundingShare", "distributionFee", "streamingRate"];
+    const ids = ["spotifyStreams", "spotifyShare", "cashInvested", "companyFundingShare", "distributionFee", "streamingRate", "vinylUnitsPressed", "vinylUnitsSold", "vinylSalePrice", "vinylCostPerUnit", "vinylFeesPerUnit"];
+    const linkedIds = ["spotifyShare", "cashInvested", "companyFundingShare", "distributionFee", "streamingRate", "vinylUnitsPressed", "vinylSalePrice", "vinylCostPerUnit", "vinylFeesPerUnit"];
+    const scenarioOnlyIds = ["spotifyStreams", "vinylUnitsSold"];
+    let currentScenario = "base";
+
+    function syncLinkedValuesToAllScenarios() {
+      linkedIds.forEach(id => {
+        const value = Number(document.getElementById(id).value);
+        Object.keys(scenarios).forEach(name => {
+          scenarios[name][id] = value;
+        });
+      });
+    }
+
+    function saveCurrentScenario() {
+      if (!currentScenario) return;
+      scenarioOnlyIds.forEach(id => {
+        scenarios[currentScenario][id] = Number(document.getElementById(id).value);
+      });
+      syncLinkedValuesToAllScenarios();
+    }
 
     const money = value => value.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
     const num = value => value.toLocaleString("en-US", { maximumFractionDigits: 0 });
@@ -304,6 +391,8 @@
 
 
     function loadScenario(name) {
+      saveCurrentScenario();
+      currentScenario = name;
       const s = scenarios[name];
       ids.forEach(id => {
         document.getElementById(id).value = s[id];
@@ -322,6 +411,11 @@
       const companyFundingShare = Number(document.getElementById("companyFundingShare").value);
       const distributionFee = Number(document.getElementById("distributionFee").value);
       const streamingRate = Number(document.getElementById("streamingRate").value);
+      const vinylUnitsPressed = Number(document.getElementById("vinylUnitsPressed").value);
+      const vinylUnitsSold = Number(document.getElementById("vinylUnitsSold").value);
+      const vinylSalePrice = Number(document.getElementById("vinylSalePrice").value);
+      const vinylCostPerUnit = Number(document.getElementById("vinylCostPerUnit").value);
+      const vinylFeesPerUnit = Number(document.getElementById("vinylFeesPerUnit").value);
       
 
       const companyFundingShareDecimal = companyFundingShare / 100;
@@ -334,6 +428,11 @@
       setText("companyFundingShareValue", `${companyFundingShare}%`);
       setText("distributionFeeValue", `${distributionFee}%`);
       setText("streamingRateValue", `$${streamingRate.toFixed(4)}`);
+      setText("vinylUnitsPressedValue", num(vinylUnitsPressed));
+      setText("vinylUnitsSoldValue", num(vinylUnitsSold));
+      setText("vinylSalePriceValue", money(vinylSalePrice));
+      setText("vinylCostPerUnitValue", money(vinylCostPerUnit));
+      setText("vinylFeesPerUnitValue", money(vinylFeesPerUnit));
       
 
       const spotifyShareDecimal = spotifyShare / 100;
@@ -349,8 +448,19 @@
       const companyRevenue = totalRevenue * companyRevenueShareDecimal;
       const artistRevenue = totalRevenue * artistRevenueShareDecimal;
 
-      const companyProfit = companyRevenue - companyCashInvested;
-      const artistProfit = artistRevenue - artistCashInvested;
+      const vinylGrossRevenue = vinylUnitsSold * vinylSalePrice;
+      const vinylManufacturingCost = vinylUnitsPressed * vinylCostPerUnit;
+      const vinylFulfillmentCost = vinylUnitsSold * vinylFeesPerUnit;
+      const vinylTotalCost = vinylManufacturingCost + vinylFulfillmentCost;
+      const vinylProfit = vinylGrossRevenue - vinylTotalCost;
+      const vinylCompanyProfit = vinylProfit * companyRevenueShareDecimal;
+      const vinylArtistProfit = vinylProfit * artistRevenueShareDecimal;
+      const vinylSellThrough = vinylUnitsPressed > 0 ? (vinylUnitsSold / vinylUnitsPressed) * 100 : 0;
+      const vinylProfitPerPressed = vinylUnitsPressed > 0 ? vinylProfit / vinylUnitsPressed : 0;
+      const vinylProfitPerSold = vinylUnitsSold > 0 ? vinylProfit / vinylUnitsSold : 0;
+
+      const companyProfit = companyRevenue - companyCashInvested + vinylCompanyProfit;
+      const artistProfit = artistRevenue - artistCashInvested + vinylArtistProfit;
       const roi = companyCashInvested > 0 ? (companyProfit / companyCashInvested) * 100 : 0;
       const multiple = companyCashInvested > 0 ? companyRevenue / companyCashInvested : 0;
 
@@ -380,6 +490,13 @@
       setText("roi", pct(roi));
       setClass("roi", `metric-value ${roi >= 0 ? "green" : "red"}`);
       setText("multiple", `${multiple.toFixed(2)}x`);
+      setText("vinylGrossRevenue", money(vinylGrossRevenue));
+      setText("vinylTotalCost", money(vinylTotalCost));
+      setText("vinylProfit", money(vinylProfit));
+      setClass("vinylProfit", `metric-value ${vinylProfit >= 0 ? "green" : "red"}`);
+      setText("vinylSellThrough", pct(vinylSellThrough));
+      setText("vinylProfitPerPressed", money(vinylProfitPerPressed));
+      setText("vinylProfitPerSold", money(vinylProfitPerSold));
       setText("breakEvenSpotifyStreams", num(breakEvenSpotifyStreams));
       setText("breakEvenGrossStreamingRevenue", money(breakEvenGrossStreamingRevenue));
       setText("cashToRecoup", money(companyCashInvested));
@@ -392,7 +509,13 @@ Artist Revenue = Total Revenue × (1 - Company Funding %)
 Company Cash Invested = Total Cash Invested × Company Funding %
 Artist Cash Invested = Total Cash Invested × (1 - Company Funding %)
 Company Profit = Company Revenue - Company Cash Invested
-Artist Profit = Artist Revenue - Artist Cash Invested`);
+Vinyl Gross Revenue = Units Sold × Sale Price
+Vinyl Total Cost = (Units Pressed × Cost Per Unit) + (Units Sold × Fees Per Unit)
+Vinyl Profit = Vinyl Gross Revenue - Vinyl Total Cost
+Profit Per Unit Pressed = Vinyl Profit ÷ Units Pressed
+Profit Per Unit Sold = Vinyl Profit ÷ Units Sold
+Company Profit = Streaming Company Profit + (Vinyl Profit × Company Funding %)
+Artist Profit = Streaming Artist Profit + (Vinyl Profit × Artist Funding %)`);
     }
 
     ids.forEach(id => {
@@ -401,6 +524,7 @@ Artist Profit = Artist Revenue - Artist Cash Invested`);
 
       slider.addEventListener("input", (e) => {
         numInput.value = e.target.value;
+        if (linkedIds.includes(id)) syncLinkedValuesToAllScenarios();
         calculate();
       });
 
@@ -412,10 +536,12 @@ Artist Profit = Artist Revenue - Artist Cash Invested`);
         if (val > max) val = max;
 
         slider.value = val;
+        if (linkedIds.includes(id)) syncLinkedValuesToAllScenarios();
         calculate();
       });
     });
 
+    currentScenario = null;
     loadScenario("base");
   </script>
 </body>
