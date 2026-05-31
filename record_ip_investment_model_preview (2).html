@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lockstep Project Incubator</title>
+  <style>
+    :root {
+      --bg: #09090b;
+      --panel: #18181b;
+      --panel-2: #0f0f12;
+      --border: #27272a;
+      --text: #f4f4f5;
+      --muted: #a1a1aa;
+      --green: #86efac;
+      --red: #fca5a5;
+      --yellow: #fde68a;
+      --blue: #93c5fd;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top left, #18181b 0%, var(--bg) 45%);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 32px;
+    }
+
+    .wrap { max-width: 1280px; margin: 0 auto; }
+
+    .eyebrow {
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .22em;
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      font-size: clamp(36px, 6vw, 68px);
+      line-height: .95;
+      margin: 0 0 18px;
+      letter-spacing: -0.06em;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.6;
+      max-width: 760px;
+      margin-bottom: 28px;
+    }
+
+    .scenario-buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 28px; }
+
+    button {
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      padding: 11px 16px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    button.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+    .grid { display: grid; grid-template-columns: minmax(320px, 440px) 1fr; gap: 24px; align-items: start; }
+
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } body { padding: 20px; } }
+
+    .controls { display: grid; gap: 14px; }
+
+    .field, .card {
+      background: rgba(24, 24, 27, .92);
+      border: 1px solid var(--border);
+      border-radius: 26px;
+      padding: 22px;
+      box-shadow: 0 18px 50px rgba(0,0,0,.22);
+    }
+
+    .field-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 7px;
+      gap: 12px;
+    }
+
+    .field-title, .label {
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .09em;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .field-input-box {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 700;
+      text-align: right;
+      padding: 4px 8px;
+      border-radius: 6px;
+      width: 120px;
+    }
+
+    .field-input-box:focus { outline: 1px solid var(--muted); }
+
+    .field-value { font-size: 28px; font-weight: 900; margin-bottom: 15px; color: #ffffff; }
+
+    input[type="range"] { width: 100%; accent-color: #fafafa; cursor: pointer; }
+
+    .help { color: var(--muted); font-size: 14px; line-height: 1.5; margin-top: 9px; }
+
+    .results { display: grid; gap: 18px; }
+
+    .verdict-card { padding: 32px; }
+
+    .verdict { font-size: clamp(36px, 5vw, 58px); font-weight: 950; letter-spacing: -0.05em; margin-top: 6px; }
+
+    .metrics { display: grid; grid-template-columns: repeat(2, minmax(220px, 1fr)); gap: 16px; }
+
+    @media (max-width: 700px) { .metrics { grid-template-columns: 1fr; } }
+
+    .metric-value { font-size: 31px; font-weight: 950; letter-spacing: -0.04em; }
+
+    .green { color: var(--green); }
+    .red { color: var(--red); }
+    .yellow { color: var(--yellow); }
+    .blue { color: var(--blue); }
+
+    .break-even { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 14px; }
+    @media (max-width: 900px) { .break-even { grid-template-columns: 1fr; } }
+
+    .mini {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 18px;
+    }
+
+    .mini-value { font-size: 24px; font-weight: 900; margin-top: 8px; }
+
+    p { color: var(--muted); line-height: 1.65; margin: 12px 0 0; }
+
+    .formula {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px;
+      color: #d4d4d8;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 14px;
+      overflow-x: auto;
+      margin-top: 14px;
+      white-space: pre-wrap;
+    }
+
+    .module-title {
+      grid-column: 1 / -1;
+      color: var(--text);
+      font-size: 24px;
+      font-weight: 950;
+      letter-spacing: -0.04em;
+      margin: 10px 0 -4px;
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="eyebrow">Lockstep Strategic Modeling Suite</div>
+    <h1>Lockstep Project Incubator</h1>
+    <div class="subtitle">
+      Model creative project incubation scenarios, estimate streaming economics, test partnership structures, and evaluate whether a release creates aligned upside for both Lockstep and the artist.
+    </div>
+
+    <div class="scenario-buttons">
+      <button id="conservativeBtn" onclick="loadScenario('conservative')">Conservative</button>
+      <button id="baseBtn" class="active" onclick="loadScenario('base')">Goal</button>
+      <button id="aggressiveBtn" onclick="loadScenario('aggressive')">Best Case</button>
+    </div>
+
+    <section class="grid">
+      <div class="controls">
+        <div class="field">
+          <div class="field-header">
+            <div class="field-title">Spotify Streams</div>
+            <input type="number" id="spotifyStreamsNum" class="field-input-box" min="100000" max="50000000" step="100000">
+          </div>
+          <div class="field-value" id="spotifyStreamsValue"></div>
+          <input id="spotifyStreams" type="range" min="100000" max="50000000" step="100000" />
+          <div class="help">Known or estimated Spotify stream count for the release.</div>
+        </div>
+
+        <div class="field">
+          <div class="field-header">
+            <div class="field-title">Spotify Share of Total Streams</div>
+            <input type="number" id="spotifyShareNum" class="field-input-box" min="5" max="90" step="1">
+          </div>
+          <div class="field-value" id="spotifyShareValue"></div>
+          <input id="spotifyShare" type="range" min="5" max="90" step="1" />
+          <div class="help">If Spotify is 50% of consumption, the model estimates total streams by dividing Spotify streams by 50%.</div>
+        </div>
+
+        <div class="field">
+          <div class="field-header">
+            <div class="field-title">Total Cash Invested</div>
+            <input type="number" id="cashInvestedNum" class="field-input-box" min="0" max="250000" step="1000">
+          </div>
+          <div class="field-value" id="cashInvestedValue"></div>
+          <input id="cashInvested" type="range" min="0" max="250000" step="1000" />
+          <div class="help">Recording, marketing, visuals, advances, tour support, or any other cash deployed by both sides combined.</div>
+        </div>
+
+        <div class="field">
+          <div class="field-header">
+            <div class="field-title">Company Funding %</div>
+            <input type="number" id="companyFundingShareNum" class="field-input-box" min="0" max="100" step="1">
+          </div>
+          <div class="field-value" id="companyFundingShareValue"></div>
+          <input id="companyFundingShare" type="range" min="0" max="100" step="1" />
+          <div class="help">What percentage of the total cash investment came from Lockstep. The artist funds the remaining percentage.</div>
+        </div>
+
+        <div class="field">
+          <div class="field-header">
+            <div class="field-title">Distribution Fee</div>
+            <input type="number" id="distributionFeeNum" class="field-input-box" min="0" max="30" step="1">
+          </div>
+          <div class="field-value" id="distributionFeeValue"></div>
+          <input id="distributionFee" type="range" min="0" max="30" step="1" />
+          <div class="help">Percentage paid to distribution before the artist/company revenue split. Starts at 15%.</div>
+        </div>
+
+        <div class="field">
+          <div class="field-header">
+            <div class="field-title">Streaming Rate</div>
+            <input type="number" id="streamingRateNum" class="field-input-box" min="0.001" max="0.008" step="0.0001">
+          </div>
+          <div class="field-value" id="streamingRateValue"></div>
+          <input id="streamingRate" type="range" min="0.001" max="0.008" step="0.0001" />
+          <div class="help">Approximate dollars paid per stream. This is a blunt blended estimate, not a precise royalty statement.</div>
+        </div>
+
+        <div class="module-title">Vinyl Sales Module</div>
+
+        <div class="field">
+          <div class="field-header">
+            <div class="field-title">Vinyl Units Pressed</div>
+            <input type="number" id="vinylUnitsPressedNum" class="field-input-box" min="0" max="10000" step="50">
+          </div>
+          <div class="field-value" id="vinylUnitsPressedValue"></div>
+          <input id="vinylUnitsPressed" type="range" min="0" max="10000" step="50" />
+          <div class="help">Total number of vinyl units manufactured for this release.</div>
+        </div>
+
+        <div class="field">
+          <div class="field-header">
+            <div class="field-title">Vinyl Units Sold</div>
+            <input type="number" id="vinylUnitsSoldNum" class="field-input-box" min="0" max="10000" step="50">
+          </div>
+          <div class="field-value" id="vinylUnitsSoldValue"></div>
+          <input id="vinylUnitsSold" type="range" min="0" max="10000" step="50" />
+          <div class="help">Estimated sell-through. This can vary by Conservative, Goal, and Best Case.</div>
+        </div>
+
+        <div class="field">
+          <div class="field-header">
+            <div class="field-title">Vinyl Sale Price</div>
+            <input type="number" id="vinylSalePriceNum" class="field-input-box" min="5" max="100" step="1">
+          </div>
+          <div class="field-value" id="vinylSalePriceValue"></div>
+          <input id="vinylSalePrice" type="range" min="5" max="100" step="1" />
+          <div class="help">Retail price per vinyl unit.</div>
+        </div>
+
+        <div class="field">
+          <div class="field-header">
+            <div class="field-title">Vinyl Cost Per Unit</div>
+            <input type="number" id="vinylCostPerUnitNum" class="field-input-box" min="1" max="50" step="0.5">
+          </div>
+          <div class="field-value" id="vinylCostPerUnitValue"></div>
+          <input id="vinylCostPerUnit" type="range" min="1" max="50" step="0.5" />
+          <div class="help">Manufacturing cost per pressed unit. Unsold inventory still costs money.</div>
+        </div>
+
+        <div class="field">
+          <div class="field-header">
+            <div class="field-title">Fulfillment / Fees Per Sold Unit</div>
+            <input type="number" id="vinylFeesPerUnitNum" class="field-input-box" min="0" max="30" step="0.5">
+          </div>
+          <div class="field-value" id="vinylFeesPerUnitValue"></div>
+          <input id="vinylFeesPerUnit" type="range" min="0" max="30" step="0.5" />
+          <div class="help">Payment processing, platform fees, packaging, shipping subsidy, or other per-sale cost.</div>
+        </div>
+
+        <div class="module-title">Digital Downloads Module</div>
+
+        <div class="field">
+          <div class="field-header">
+            <div class="field-title">Digital Download Units</div>
+            <input type="number" id="digitalDownloadUnitsNum" class="field-input-box" min="0" max="10000" step="10">
+          </div>
+          <div class="field-value" id="digitalDownloadUnitsValue"></div>
+          <input id="digitalDownloadUnits" type="range" min="0" max="10000" step="10" />
+          <div class="help">Projected number of digital albums or downloads sold. Defaults to 0.</div>
+        </div>
+
+        <div class="field">
+          <div class="field-header">
+            <div class="field-title">Digital Download Price</div>
+            <input type="number" id="digitalDownloadPriceNum" class="field-input-box" min="0" max="50" step="0.01">
+          </div>
+          <div class="field-value" id="digitalDownloadPriceValue"></div>
+          <input id="digitalDownloadPrice" type="range" min="0" max="50" step="0.01" />
+          <div class="help">Price per digital download. Defaults to $9.99. No costs or expenses are applied.</div>
+        </div>
+
+        
+      </div>
+
+      <div class="results">
+        <div class="card verdict-card">
+          <div class="label">Project Read</div>
+          <div class="verdict" id="verdict"></div>
+          <p>This estimates whether the incubation structure creates aligned economic upside between Lockstep and the artist.</p>
+        </div>
+
+        <div class="metrics">
+          <div class="card"><div class="label">Estimated Total Streams</div><div class="metric-value" id="estimatedTotalStreams"></div></div>
+          <div class="card"><div class="label">Gross Streaming Revenue</div><div class="metric-value" id="grossStreamingRevenue"></div></div>
+          <div class="card"><div class="label">Distribution Cost</div><div class="metric-value" id="distributionCost"></div></div>
+          <div class="card"><div class="label">Total Revenue</div><div class="metric-value" id="totalRevenue"></div></div>
+          
+          <div class="card"><div class="label">Company Cash Invested</div><div class="metric-value" id="companyCashInvested"></div></div>
+          <div class="card"><div class="label">Artist Cash Invested</div><div class="metric-value" id="artistCashInvested"></div></div>
+          <div class="card"><div class="label">Company Profit</div><div class="metric-value" id="companyProfit"></div></div>
+          <div class="card"><div class="label">Artist Profit</div><div class="metric-value" id="artistProfit"></div></div>
+          <div class="card"><div class="label">Company ROI</div><div class="metric-value" id="roi"></div></div>
+          <div class="card"><div class="label">Company Multiple on Invested Capital</div><div class="metric-value" id="multiple"></div></div>
+          <div class="card"><div class="label">Vinyl Gross Revenue</div><div class="metric-value" id="vinylGrossRevenue"></div></div>
+          <div class="card"><div class="label">Vinyl Total Cost</div><div class="metric-value" id="vinylTotalCost"></div></div>
+          <div class="card"><div class="label">Vinyl Profit</div><div class="metric-value" id="vinylProfit"></div></div>
+          <div class="card"><div class="label">Vinyl Sell-Through</div><div class="metric-value" id="vinylSellThrough"></div></div>
+          <div class="card"><div class="label">Profit Per Unit Pressed</div><div class="metric-value" id="vinylProfitPerPressed"></div></div>
+          <div class="card"><div class="label">Profit Per Unit Sold</div><div class="metric-value" id="vinylProfitPerSold"></div></div>
+          <div class="card"><div class="label">Digital Download Units</div><div class="metric-value" id="digitalDownloadUnitsDisplay"></div></div>
+          <div class="card"><div class="label">Digital Revenue</div><div class="metric-value" id="digitalRevenue"></div></div>
+          <div class="card"><div class="label">Digital Profit</div><div class="metric-value" id="digitalProfit"></div></div>
+          <div class="card"><div class="label">Total Project Profit</div><div class="metric-value" id="totalProjectProfit"></div></div>
+        </div>
+
+        <div class="card">
+          <div class="label">Break-even Test</div>
+          <div class="break-even">
+            <div class="mini"><div class="label">Needed Spotify Streams</div><div class="mini-value" id="breakEvenSpotifyStreams"></div></div>
+            <div class="mini"><div class="label">Needed Gross Streaming Revenue</div><div class="mini-value" id="breakEvenGrossStreamingRevenue"></div></div>
+            <div class="mini"><div class="label">Company Cash to Recoup</div><div class="mini-value" id="cashToRecoup"></div></div>
+          </div>
+          <p>This tells you how many Spotify streams the release needs, given Spotify share, payout rate, distribution fee, company cash invested, and revenue share, just to earn the company investment back from streaming.</p>
+        </div>
+
+        <div class="card">
+          <div class="label">Simple Deal Read</div>
+          <p>If company profit is negative, the deal needs one of these: less company cash invested, more company revenue share, better streaming performance, additional revenue streams, or a strategic reason to accept a streaming loss.</p>
+          <p>If both company and artist profit are positive, the deal structure is healthier because both sides are winning on the same release.</p>
+          <div class="formula" id="formula"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const scenarios = {
+      conservative: { spotifyStreams: 2000000, spotifyShare: 50, cashInvested: 25000, companyFundingShare: 50, distributionFee: 15, streamingRate: 0.004, vinylUnitsPressed: 500, vinylUnitsSold: 250, vinylSalePrice: 35, vinylCostPerUnit: 9, vinylFeesPerUnit: 5, digitalDownloadUnits: 0, digitalDownloadPrice: 9.99 },
+      base: { spotifyStreams: 7037000, spotifyShare: 50, cashInvested: 25000, companyFundingShare: 50, distributionFee: 15, streamingRate: 0.004, vinylUnitsPressed: 500, vinylUnitsSold: 350, vinylSalePrice: 35, vinylCostPerUnit: 9, vinylFeesPerUnit: 5, digitalDownloadUnits: 0, digitalDownloadPrice: 9.99 },
+      aggressive: { spotifyStreams: 15000000, spotifyShare: 50, cashInvested: 25000, companyFundingShare: 50, distributionFee: 15, streamingRate: 0.004, vinylUnitsPressed: 500, vinylUnitsSold: 500, vinylSalePrice: 35, vinylCostPerUnit: 9, vinylFeesPerUnit: 5, digitalDownloadUnits: 0, digitalDownloadPrice: 9.99 }
+    };
+
+    const ids = ["spotifyStreams", "spotifyShare", "cashInvested", "companyFundingShare", "distributionFee", "streamingRate", "vinylUnitsPressed", "vinylUnitsSold", "vinylSalePrice", "vinylCostPerUnit", "vinylFeesPerUnit", "digitalDownloadUnits", "digitalDownloadPrice"];
+    const linkedIds = ["spotifyShare", "cashInvested", "companyFundingShare", "distributionFee", "streamingRate", "vinylUnitsPressed", "vinylSalePrice", "vinylCostPerUnit", "vinylFeesPerUnit", "digitalDownloadPrice"];
+    const scenarioOnlyIds = ["spotifyStreams", "vinylUnitsSold", "digitalDownloadUnits"];
+    let currentScenario = "base";
+
+    function syncLinkedValuesToAllScenarios() {
+      linkedIds.forEach(id => {
+        const value = Number(document.getElementById(id).value);
+        Object.keys(scenarios).forEach(name => {
+          scenarios[name][id] = value;
+        });
+      });
+    }
+
+    function saveCurrentScenario() {
+      if (!currentScenario) return;
+      scenarioOnlyIds.forEach(id => {
+        scenarios[currentScenario][id] = Number(document.getElementById(id).value);
+      });
+      syncLinkedValuesToAllScenarios();
+    }
+
+    const money = value => value.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+    const num = value => value.toLocaleString("en-US", { maximumFractionDigits: 0 });
+    const pct = value => `${value.toFixed(1)}%`;
+
+    function setText(id, value) { document.getElementById(id).textContent = value; }
+    function setClass(id, className) { document.getElementById(id).className = className; }
+
+
+    function loadScenario(name) {
+      saveCurrentScenario();
+      currentScenario = name;
+      const s = scenarios[name];
+      ids.forEach(id => {
+        document.getElementById(id).value = s[id];
+        document.getElementById(`${id}Num`).value = s[id];
+      });
+      document.querySelectorAll(".scenario-buttons button").forEach(btn => btn.classList.remove("active"));
+      document.getElementById(`${name}Btn`).classList.add("active");
+      calculate();
+    }
+
+    function calculate() {
+
+      const spotifyStreams = Number(document.getElementById("spotifyStreams").value);
+      const spotifyShare = Number(document.getElementById("spotifyShare").value);
+      const cashInvested = Number(document.getElementById("cashInvested").value);
+      const companyFundingShare = Number(document.getElementById("companyFundingShare").value);
+      const distributionFee = Number(document.getElementById("distributionFee").value);
+      const streamingRate = Number(document.getElementById("streamingRate").value);
+      const vinylUnitsPressed = Number(document.getElementById("vinylUnitsPressed").value);
+      const vinylUnitsSold = Number(document.getElementById("vinylUnitsSold").value);
+      const vinylSalePrice = Number(document.getElementById("vinylSalePrice").value);
+      const vinylCostPerUnit = Number(document.getElementById("vinylCostPerUnit").value);
+      const vinylFeesPerUnit = Number(document.getElementById("vinylFeesPerUnit").value);
+      const digitalDownloadUnits = Number(document.getElementById("digitalDownloadUnits").value);
+      const digitalDownloadPrice = Number(document.getElementById("digitalDownloadPrice").value);
+      
+
+      const companyFundingShareDecimal = companyFundingShare / 100;
+      const companyCashInvested = cashInvested * companyFundingShareDecimal;
+      const artistCashInvested = cashInvested - companyCashInvested;
+
+      setText("spotifyStreamsValue", num(spotifyStreams));
+      setText("spotifyShareValue", `${spotifyShare}%`);
+      setText("cashInvestedValue", money(cashInvested));
+      setText("companyFundingShareValue", `${companyFundingShare}%`);
+      setText("distributionFeeValue", `${distributionFee}%`);
+      setText("streamingRateValue", `$${streamingRate.toFixed(4)}`);
+      setText("vinylUnitsPressedValue", num(vinylUnitsPressed));
+      setText("vinylUnitsSoldValue", num(vinylUnitsSold));
+      setText("vinylSalePriceValue", money(vinylSalePrice));
+      setText("vinylCostPerUnitValue", money(vinylCostPerUnit));
+      setText("vinylFeesPerUnitValue", money(vinylFeesPerUnit));
+      setText("digitalDownloadUnitsValue", num(digitalDownloadUnits));
+      setText("digitalDownloadPriceValue", money(digitalDownloadPrice));
+      
+
+      const spotifyShareDecimal = spotifyShare / 100;
+      const companyRevenueShareDecimal = companyFundingShareDecimal;
+      const artistRevenueShareDecimal = 1 - companyRevenueShareDecimal;
+      const distributionFeeDecimal = distributionFee / 100;
+
+      const estimatedTotalStreams = spotifyStreams / spotifyShareDecimal;
+      const grossStreamingRevenue = estimatedTotalStreams * streamingRate;
+      const distributionCost = grossStreamingRevenue * distributionFeeDecimal;
+      const totalRevenue = grossStreamingRevenue - distributionCost;
+
+      const companyRevenue = totalRevenue * companyRevenueShareDecimal;
+      const artistRevenue = totalRevenue * artistRevenueShareDecimal;
+
+      const vinylGrossRevenue = vinylUnitsSold * vinylSalePrice;
+      const vinylManufacturingCost = vinylUnitsPressed * vinylCostPerUnit;
+      const vinylFulfillmentCost = vinylUnitsSold * vinylFeesPerUnit;
+      const vinylTotalCost = vinylManufacturingCost + vinylFulfillmentCost;
+      const vinylProfit = vinylGrossRevenue - vinylTotalCost;
+      const vinylCompanyProfit = vinylProfit * companyRevenueShareDecimal;
+      const vinylArtistProfit = vinylProfit * artistRevenueShareDecimal;
+      const vinylSellThrough = vinylUnitsPressed > 0 ? (vinylUnitsSold / vinylUnitsPressed) * 100 : 0;
+      const vinylProfitPerPressed = vinylUnitsPressed > 0 ? vinylProfit / vinylUnitsPressed : 0;
+      const vinylProfitPerSold = vinylUnitsSold > 0 ? vinylProfit / vinylUnitsSold : 0;
+
+      const digitalRevenue = digitalDownloadUnits * digitalDownloadPrice;
+      const digitalProfit = digitalRevenue;
+      const digitalCompanyProfit = digitalProfit * companyRevenueShareDecimal;
+      const digitalArtistProfit = digitalProfit * artistRevenueShareDecimal;
+      const totalProjectProfit = (companyRevenue + artistRevenue - cashInvested) + vinylProfit + digitalProfit;
+
+      const companyProfit = companyRevenue - companyCashInvested + vinylCompanyProfit + digitalCompanyProfit;
+      const artistProfit = artistRevenue - artistCashInvested + vinylArtistProfit + digitalArtistProfit;
+      const roi = companyCashInvested > 0 ? (companyProfit / companyCashInvested) * 100 : 0;
+      const multiple = companyCashInvested > 0 ? companyRevenue / companyCashInvested : 0;
+
+      const breakEvenNetRevenue = companyRevenueShareDecimal > 0 ? companyCashInvested / companyRevenueShareDecimal : 0;
+      const breakEvenGrossStreamingRevenue = (1 - distributionFeeDecimal) > 0 ? breakEvenNetRevenue / (1 - distributionFeeDecimal) : 0;
+      const breakEvenSpotifyStreams = streamingRate > 0 ? (breakEvenGrossStreamingRevenue * spotifyShareDecimal) / streamingRate : 0;
+
+      let verdict = "Misaligned structure";
+      let verdictColor = "verdict red";
+      if (roi >= 100) { verdict = "High resonance"; verdictColor = "verdict green"; }
+      else if (roi >= 25) { verdict = "Strong alignment"; verdictColor = "verdict green"; }
+      else if (roi >= 0) { verdict = "Strategic incubation"; verdictColor = "verdict yellow"; }
+
+      setText("verdict", verdict);
+      setClass("verdict", verdictColor);
+      setText("estimatedTotalStreams", num(estimatedTotalStreams));
+      setText("grossStreamingRevenue", money(grossStreamingRevenue));
+      setText("distributionCost", money(distributionCost));
+      setText("totalRevenue", money(totalRevenue));
+      
+      setText("companyCashInvested", money(companyCashInvested));
+      setText("artistCashInvested", money(artistCashInvested));
+      setText("companyProfit", money(companyProfit));
+      setClass("companyProfit", `metric-value ${companyProfit >= 0 ? "green" : "red"}`);
+      setText("artistProfit", money(artistProfit));
+      setClass("artistProfit", `metric-value ${artistProfit >= 0 ? "green" : "red"}`);
+      setText("roi", pct(roi));
+      setClass("roi", `metric-value ${roi >= 0 ? "green" : "red"}`);
+      setText("multiple", `${multiple.toFixed(2)}x`);
+      setText("vinylGrossRevenue", money(vinylGrossRevenue));
+      setText("vinylTotalCost", money(vinylTotalCost));
+      setText("vinylProfit", money(vinylProfit));
+      setClass("vinylProfit", `metric-value ${vinylProfit >= 0 ? "green" : "red"}`);
+      setText("vinylSellThrough", pct(vinylSellThrough));
+      setText("vinylProfitPerPressed", money(vinylProfitPerPressed));
+      setText("vinylProfitPerSold", money(vinylProfitPerSold));
+      setText("digitalDownloadUnitsDisplay", num(digitalDownloadUnits));
+      setText("digitalRevenue", money(digitalRevenue));
+      setText("digitalProfit", money(digitalProfit));
+      setClass("digitalProfit", `metric-value ${digitalProfit >= 0 ? "green" : "red"}`);
+      setText("totalProjectProfit", money(totalProjectProfit));
+      setClass("totalProjectProfit", `metric-value ${totalProjectProfit >= 0 ? "green" : "red"}`);
+      setText("breakEvenSpotifyStreams", num(breakEvenSpotifyStreams));
+      setText("breakEvenGrossStreamingRevenue", money(breakEvenGrossStreamingRevenue));
+      setText("cashToRecoup", money(companyCashInvested));
+
+      setText("formula", `Estimated Total Streams = Spotify Streams ÷ Spotify Share
+Gross Streaming Revenue = Estimated Total Streams × Streaming Rate
+Total Revenue = Gross Streaming Revenue - Distribution Fee
+Company Revenue = Total Revenue × Company Funding %
+Artist Revenue = Total Revenue × (1 - Company Funding %)
+Company Cash Invested = Total Cash Invested × Company Funding %
+Artist Cash Invested = Total Cash Invested × (1 - Company Funding %)
+Company Profit = Company Revenue - Company Cash Invested
+Vinyl Gross Revenue = Units Sold × Sale Price
+Vinyl Total Cost = (Units Pressed × Cost Per Unit) + (Units Sold × Fees Per Unit)
+Vinyl Profit = Vinyl Gross Revenue - Vinyl Total Cost
+Profit Per Unit Pressed = Vinyl Profit ÷ Units Pressed
+Profit Per Unit Sold = Vinyl Profit ÷ Units Sold
+Company Profit = Streaming Company Profit + (Vinyl Profit × Company Funding %)
+Digital Revenue = Digital Download Units × Digital Download Price
+Digital Profit = Digital Revenue
+Total Project Profit = Streaming Profit + Vinyl Profit + Digital Profit
+Company Profit = Streaming Company Profit + (Vinyl Profit × Company Funding %) + (Digital Profit × Company Funding %)
+Artist Profit = Streaming Artist Profit + (Vinyl Profit × Artist Funding %) + (Digital Profit × Artist Funding %)`);
+    }
+
+    ids.forEach(id => {
+      const slider = document.getElementById(id);
+      const numInput = document.getElementById(`${id}Num`);
+
+      slider.addEventListener("input", (e) => {
+        numInput.value = e.target.value;
+        if (linkedIds.includes(id)) syncLinkedValuesToAllScenarios();
+        calculate();
+      });
+
+      numInput.addEventListener("input", (e) => {
+        let val = Number(e.target.value);
+        const min = Number(slider.min);
+        const max = Number(slider.max);
+        if (val < min) val = min;
+        if (val > max) val = max;
+
+        slider.value = val;
+        if (linkedIds.includes(id)) syncLinkedValuesToAllScenarios();
+        calculate();
+      });
+    });
+
+    currentScenario = null;
+    loadScenario("base");
+  </script>
+</body>
+</html>
