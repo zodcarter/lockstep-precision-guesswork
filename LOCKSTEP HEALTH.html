@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Lockstep Health Signals v2</title>
+<style>
+  :root {
+    --bg: #111111;
+    --panel: #1b1b1b;
+    --panel2: #242424;
+    --text: #f4f1ea;
+    --muted: #aaa39a;
+    --line: #383838;
+    --good: #8fd694;
+    --warn: #f4c95d;
+    --bad: #f05d5e;
+    --accent: #d7b46a;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: radial-gradient(circle at top, #252018 0%, #111 45%);
+    color: var(--text);
+  }
+
+  .app {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 28px;
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    align-items: flex-end;
+    margin-bottom: 24px;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 32px;
+    letter-spacing: -0.04em;
+  }
+
+  .subtitle {
+    margin-top: 8px;
+    color: var(--muted);
+    max-width: 760px;
+    line-height: 1.45;
+  }
+
+  .status {
+    padding: 14px 18px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04);
+    border-radius: 18px;
+    min-width: 220px;
+    text-align: right;
+  }
+
+  .status-label {
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+
+  .status-value {
+    font-size: 26px;
+    font-weight: 800;
+    margin-top: 4px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 18px;
+  }
+
+  .panel {
+    background: rgba(27,27,27,0.94);
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    padding: 20px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.28);
+  }
+
+  .panel h2 {
+    margin: 0 0 14px;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+  }
+
+  .controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  label {
+    display: block;
+    color: var(--muted);
+    font-size: 12px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  input[type="number"], input[type="text"] {
+    width: 100%;
+    padding: 11px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: #101010;
+    color: var(--text);
+    font-size: 15px;
+  }
+
+  input[type="range"] { width: 100%; }
+
+  .control {
+    background: var(--panel2);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 13px;
+  }
+
+  .range-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .range-value {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .waterfall {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .step {
+    display: grid;
+    grid-template-columns: 170px 1fr 70px;
+    gap: 12px;
+    align-items: center;
+    background: var(--panel2);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 12px;
+  }
+
+  .bar-wrap {
+    height: 16px;
+    background: #101010;
+    border-radius: 999px;
+    overflow: hidden;
+    border: 1px solid #333;
+  }
+
+  .bar {
+    height: 100%;
+    width: 0%;
+    border-radius: 999px;
+    transition: width 0.2s ease;
+    background: var(--accent);
+  }
+
+  .bar.good { background: var(--good); }
+  .bar.warn { background: var(--warn); }
+  .bar.bad { background: var(--bad); }
+
+  .step-name {
+    font-weight: 700;
+    font-size: 14px;
+  }
+
+  .step-note {
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 2px;
+  }
+
+  .score {
+    text-align: right;
+    font-weight: 800;
+  }
+
+  .client-grid, .resource-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .client-card, .resource-card {
+    border: 1px solid var(--line);
+    background: var(--panel2);
+    border-radius: 16px;
+    padding: 14px;
+  }
+
+  .client-top, .resource-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .client-title, .resource-title {
+    font-weight: 800;
+  }
+
+  .pill {
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: #111;
+    color: var(--muted);
+    border: 1px solid var(--line);
+  }
+
+  .mini-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  .mini {
+    background: #141414;
+    padding: 9px;
+    border-radius: 12px;
+    border: 1px solid #303030;
+  }
+
+  .mini span {
+    display: block;
+    color: var(--muted);
+    font-size: 11px;
+    margin-bottom: 4px;
+  }
+
+  .mini strong {
+    font-size: 15px;
+  }
+
+  .summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .metric {
+    background: var(--panel2);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 14px;
+  }
+
+  .metric span {
+    display: block;
+    color: var(--muted);
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+
+  .metric strong {
+    font-size: 22px;
+  }
+
+  .recommendation {
+    margin-top: 14px;
+    padding: 16px;
+    border-radius: 16px;
+    border: 1px solid var(--line);
+    background: #131313;
+    line-height: 1.45;
+  }
+
+  .full { grid-column: 1 / -1; }
+
+  button {
+    cursor: pointer;
+    border: 1px solid var(--line);
+    background: #101010;
+    color: var(--text);
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-weight: 700;
+  }
+
+  button:hover { border-color: var(--accent); }
+
+  .actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  @media (max-width: 900px) {
+    .grid, .controls, .summary, .mini-grid {
+      grid-template-columns: 1fr;
+    }
+
+    header {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .status {
+      text-align: left;
+    }
+
+    .step {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div>
+      <h1>Lockstep Health Signals v2</h1>
+      <div class="subtitle">
+        A compact operating tool for seeing whether Lockstep’s clients, cash, people, and opportunities are strengthening the organism — or quietly draining it.
+      </div>
+    </div>
+    <div class="status">
+      <div class="status-label">Operating Read</div>
+      <div id="statusValue" class="status-value">—</div>
+    </div>
+  </header>
+
+  <section class="summary">
+    <div class="metric"><span>Monthly Revenue</span><strong id="monthlyRevenueOut">$0</strong></div>
+    <div class="metric"><span>Monthly Expenses</span><strong id="monthlyExpensesOut">$0</strong></div>
+    <div class="metric"><span>Monthly Profit</span><strong id="monthlyProfitOut">$0</strong></div>
+    <div class="metric"><span>Runway</span><strong id="runwayOut">0 mo</strong></div>
+  </section>
+
+  <div class="grid">
+    <section class="panel">
+      <h2>Core Finance</h2>
+      <div class="controls">
+        <div class="control">
+          <label>Cash on Hand</label>
+          <input id="cashOnHand" type="number" value="25000">
+        </div>
+        <div class="control">
+          <label>Tax Savings Reserve</label>
+          <input id="taxReserve" type="number" value="10000">
+        </div>
+        <div class="control">
+          <label>Monthly Fixed Expenses</label>
+          <input id="fixedExpenses" type="number" value="12000">
+        </div>
+        <div class="control">
+          <label>Owner Pay / Draws</label>
+          <input id="ownerPay" type="number" value="9000">
+        </div>
+        <div class="control">
+          <label>Contractor / Production Cost</label>
+          <input id="contractorCost" type="number" value="5000">
+        </div>
+      </div>
+
+      <h2 style="margin-top:22px;">Global Conditions</h2>
+      <div class="controls">
+        <div class="control">
+          <div class="range-row"><label>Strategic Clarity</label><span class="range-value" id="clarityVal">7</span></div>
+          <input id="clarity" type="range" min="1" max="10" value="7">
+        </div>
+        <div class="control">
+          <div class="range-row"><label>Emotional Drag</label><span class="range-value" id="dragVal">4</span></div>
+          <input id="drag" type="range" min="1" max="10" value="4">
+        </div>
+        <div class="control">
+          <div class="range-row"><label>Execution Confidence</label><span class="range-value" id="executionVal">6</span></div>
+          <input id="execution" type="range" min="1" max="10" value="6">
+        </div>
+        <div class="control">
+          <div class="range-row"><label>Opportunity Pull</label><span class="range-value" id="opportunityVal">7</span></div>
+          <input id="opportunity" type="range" min="1" max="10" value="7">
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Health Signals</h2>
+      <div class="waterfall">
+        <div class="step">
+          <div><div class="step-name">Cash Stability</div><div class="step-note">Profit + runway</div></div>
+          <div class="bar-wrap"><div id="cashBar" class="bar"></div></div>
+          <div id="cashScore" class="score">—</div>
+        </div>
+        <div class="step">
+          <div><div class="step-name">Client Fit</div><div class="step-note">Revenue quality + strategic alignment</div></div>
+          <div class="bar-wrap"><div id="clientBar" class="bar"></div></div>
+          <div id="clientScore" class="score">—</div>
+        </div>
+        <div class="step">
+          <div><div class="step-name">Resource Strain</div><div class="step-note">Capacity vs demand</div></div>
+          <div class="bar-wrap"><div id="resourceBar" class="bar"></div></div>
+          <div id="resourceScore" class="score">—</div>
+        </div>
+        <div class="step">
+          <div><div class="step-name">Alignment Toward Lockstep Vision</div><div class="step-note">Purpose + ecosystem contribution</div></div>
+          <div class="bar-wrap"><div id="strategyBar" class="bar"></div></div>
+          <div id="strategyScore" class="score">—</div>
+        </div>
+        <div class="step">
+          <div><div class="step-name">Lockstep Health Score</div><div class="step-note">Weighted final read</div></div>
+          <div class="bar-wrap"><div id="totalBar" class="bar"></div></div>
+          <div id="totalScore" class="score">—</div>
+        </div>
+      </div>
+      <div id="recommendation" class="recommendation">—</div>
+    </section>
+
+    <section class="panel">
+      <h2>Clients</h2>
+      <div id="clientGrid" class="client-grid"></div>
+      <div class="actions"><button onclick="addClient()">+ Add Client</button></div>
+    </section>
+
+    <section class="panel">
+      <h2>Resources / People</h2>
+      <div id="resourceGrid" class="resource-grid"></div>
+      <div class="actions"><button onclick="addResource()">+ Add Person</button></div>
+    </section>
+  </div>
+</div>
+
+<script>
+let clients = [
+  { name: "Valhalla DSP", revenue: 5000, fit: 9, stress: 3, growth: 7 },
+  { name: "Emery", revenue: 3000, fit: 10, stress: 6, growth: 9 },
+  { name: "As Cities Burn", revenue: 2500, fit: 9, stress: 5, growth: 8 }
+];
+
+let resources = [
+  { name: "Matt Carter", capacity: 35, load: 32, genius: 9 },
+  { name: "Dave", capacity: 30, load: 24, genius: 8 },
+  { name: "Caity", capacity: 30, load: 22, genius: 8 },
+  { name: "Aaron Sprinkle", capacity: 20, load: 14, genius: 9 },
+  { name: "Emmy", capacity: 25, load: 14, genius: 8 },
+  { name: "Rob", capacity: 15, load: 8, genius: 8 },
+  { name: "James", capacity: 15, load: 8, genius: 8 },
+  { name: "Kara", capacity: 15, load: 6, genius: 7 },
+  { name: "Scott", capacity: 15, load: 6, genius: 7 }
+];
+
+function money(n) {
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n || 0);
+}
+
+function clamp(n, min=0, max=100) {
+  return Math.max(min, Math.min(max, n));
+}
+
+function barClass(score) {
+  if (score >= 75) return "good";
+  if (score >= 50) return "warn";
+  return "bad";
+}
+
+function setBar(id, score) {
+  const bar = document.getElementById(id);
+  bar.style.width = clamp(score) + "%";
+  bar.className = "bar " + barClass(score);
+}
+
+function renderClients() {
+  const grid = document.getElementById("clientGrid");
+  grid.innerHTML = "";
+
+  clients.forEach((c, i) => {
+    const div = document.createElement("div");
+    div.className = "client-card";
+    div.innerHTML = `
+      <div class="client-top">
+        <input type="text" value="${c.name}" onchange="clients[${i}].name=this.value; calculate();" />
+        <span class="pill">${money(c.revenue)}/mo</span>
+      </div>
+      <div class="mini-grid">
+        <div class="mini"><span>Revenue</span><input type="number" value="${c.revenue}" onchange="clients[${i}].revenue=+this.value; calculate();"></div>
+        <div class="mini"><span>Fit</span><input type="number" min="1" max="10" value="${c.fit}" onchange="clients[${i}].fit=+this.value; calculate();"></div>
+        <div class="mini"><span>Stress</span><input type="number" min="1" max="10" value="${c.stress}" onchange="clients[${i}].stress=+this.value; calculate();"></div>
+        <div class="mini"><span>Growth</span><input type="number" min="1" max="10" value="${c.growth}" onchange="clients[${i}].growth=+this.value; calculate();"></div>
+      </div>
+    `;
+    grid.appendChild(div);
+  });
+}
+
+function renderResources() {
+  const grid = document.getElementById("resourceGrid");
+  grid.innerHTML = "";
+
+  resources.forEach((r, i) => {
+    const loadPct = r.capacity ? Math.round((r.load / r.capacity) * 100) : 0;
+    const div = document.createElement("div");
+    div.className = "resource-card";
+    div.innerHTML = `
+      <div class="resource-top">
+        <input type="text" value="${r.name}" onchange="resources[${i}].name=this.value; calculate();" />
+        <span class="pill">${loadPct}% loaded</span>
+      </div>
+      <div class="mini-grid">
+        <div class="mini"><span>Capacity hrs/wk</span><input type="number" value="${r.capacity}" onchange="resources[${i}].capacity=+this.value; calculate();"></div>
+        <div class="mini"><span>Current load</span><input type="number" value="${r.load}" onchange="resources[${i}].load=+this.value; calculate();"></div>
+        <div class="mini"><span>Genius fit</span><input type="number" min="1" max="10" value="${r.genius}" onchange="resources[${i}].genius=+this.value; calculate();"></div>
+        <div class="mini"><span>Load</span><strong>${loadPct}%</strong></div>
+      </div>
+    `;
+    grid.appendChild(div);
+  });
+}
+
+function addClient() {
+  clients.push({ name: "New Client", revenue: 1000, fit: 7, stress: 5, growth: 6 });
+  calculate();
+}
+
+function addResource() {
+  resources.push({ name: "New Person", capacity: 20, load: 10, genius: 7 });
+  calculate();
+}
+
+function calculate() {
+  ["clarity","drag","execution","opportunity"].forEach(id => {
+    document.getElementById(id + "Val").textContent = document.getElementById(id).value;
+  });
+
+  const cash = +document.getElementById("cashOnHand").value || 0;
+  const taxReserve = +document.getElementById("taxReserve").value || 0;
+  const fixed = +document.getElementById("fixedExpenses").value || 0;
+  const ownerPay = +document.getElementById("ownerPay").value || 0;
+  const contractor = +document.getElementById("contractorCost").value || 0;
+
+  const revenue = clients.reduce((sum, c) => sum + (+c.revenue || 0), 0);
+  const expenses = fixed + ownerPay + contractor;
+  const profit = revenue - expenses;
+  const burn = profit < 0 ? Math.abs(profit) : expenses;
+  const runway = burn > 0 ? cash / burn : 99;
+
+  document.getElementById("monthlyRevenueOut").textContent = money(revenue);
+  document.getElementById("monthlyExpensesOut").textContent = money(expenses);
+  document.getElementById("monthlyProfitOut").textContent = money(profit);
+  document.getElementById("runwayOut").textContent = runway >= 99 ? "∞" : runway.toFixed(1) + " mo";
+
+  const reserveScore = taxReserve > 0 ? 8 : -8;
+  const cashScore = clamp((profit > 0 ? 55 : 30) + (runway * 8) + reserveScore);
+
+  const avgFit = clients.reduce((s,c) => s + +c.fit, 0) / clients.length;
+  const avgStress = clients.reduce((s,c) => s + +c.stress, 0) / clients.length;
+  const avgGrowth = clients.reduce((s,c) => s + +c.growth, 0) / clients.length;
+  const clientScore = clamp((avgFit * 5) + (avgGrowth * 4) - (avgStress * 3) + 25);
+
+  const totalCapacity = resources.reduce((s,r) => s + +r.capacity, 0);
+  const totalLoad = resources.reduce((s,r) => s + +r.load, 0);
+  const avgGenius = resources.reduce((s,r) => s + +r.genius, 0) / resources.length;
+  const loadPct = totalCapacity ? totalLoad / totalCapacity : 1;
+  const loadPenalty = loadPct > 1 ? 45 : loadPct > 0.85 ? 25 : loadPct > 0.7 ? 10 : 0;
+  const resourceScore = clamp((avgGenius * 8) - loadPenalty + 20);
+
+  const clarity = +document.getElementById("clarity").value;
+  const drag = +document.getElementById("drag").value;
+  const execution = +document.getElementById("execution").value;
+  const opportunity = +document.getElementById("opportunity").value;
+  const strategyScore = clamp((clarity * 3) + (execution * 3) + (opportunity * 3) - (drag * 2) + 25);
+
+  const totalScore = clamp(
+    cashScore * 0.30 +
+    clientScore * 0.25 +
+    resourceScore * 0.25 +
+    strategyScore * 0.20
+  );
+
+  [
+    ["cashScore", cashScore], ["clientScore", clientScore],
+    ["resourceScore", resourceScore], ["strategyScore", strategyScore],
+    ["totalScore", totalScore]
+  ].forEach(([id, score]) => document.getElementById(id).textContent = Math.round(score));
+
+  setBar("cashBar", cashScore);
+  setBar("clientBar", clientScore);
+  setBar("resourceBar", resourceScore);
+  setBar("strategyBar", strategyScore);
+  setBar("totalBar", totalScore);
+
+  const status = document.getElementById("statusValue");
+  const rec = document.getElementById("recommendation");
+
+  if (totalScore >= 75) {
+    status.textContent = "Coherent";
+    status.style.color = "var(--good)";
+    rec.innerHTML = "<strong>Green light.</strong> The system has enough cash, client quality, and human capacity to move forward. Your job is to protect focus and avoid adding complexity just because there is opportunity.";
+  } else if (totalScore >= 55) {
+    status.textContent = "Fragile";
+    status.style.color = "var(--warn)";
+    rec.innerHTML = "<strong>Caution.</strong> There is real promise, but the system has a weak point. Do not add a major new bet until you identify whether the constraint is cash, people, client stress, or strategic clarity.";
+  } else {
+    status.textContent = "Draining";
+    status.style.color = "var(--bad)";
+    rec.innerHTML = "<strong>Stop and stabilize.</strong> The model is warning that Lockstep is carrying too much drag for the available cash or human capacity. Reduce scope, simplify clients, or increase recurring revenue before adding more.";
+  }
+
+  renderClients();
+  renderResources();
+}
+
+document.querySelectorAll("input").forEach(input => input.addEventListener("input", calculate));
+calculate();
+</script>
+</body>
+</html>
